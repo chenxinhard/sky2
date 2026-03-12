@@ -1,6 +1,7 @@
 package com.sky.interceptor;
 
 import com.sky.constant.JwtClaimsConstant;
+import com.sky.context.BaseContext;
 import com.sky.properties.JwtProperties;
 import com.sky.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -32,8 +33,11 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
      * @throws Exception
      */
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
+        System.out.println("线程名字"+ Thread.currentThread().getId());
         //判断当前拦截到的是Controller的方法还是其他资源
-        if (!(handler instanceof HandlerMethod)) {
+        //handlerMethod在spring中封装的类，在下面方法中对handlerMethod进行拦截。其中handler是springmvc中prehandler拦截器的方法参数
+        if(!(handler instanceof HandlerMethod)) {
             //当前拦截到的不是动态方法，直接放行
             return true;
         }
@@ -47,6 +51,7 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
             Claims claims = JwtUtil.parseJWT(jwtProperties.getAdminSecretKey(), token);
             Long empId = Long.valueOf(claims.get(JwtClaimsConstant.EMP_ID).toString());
             log.info("当前员工id：", empId);
+            BaseContext.setCurrentId(empId);
             //3、通过，放行
             return true;
         } catch (Exception ex) {
