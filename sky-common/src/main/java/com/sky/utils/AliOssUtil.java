@@ -1,68 +1,63 @@
 package com.sky.utils;
 
-import com.aliyun.oss.ClientException;
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.OSSException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.aliyun.oss.*;
+import com.aliyun.oss.common.auth.CredentialsProvider;
+import com.aliyun.oss.common.auth.DefaultCredentialProvider;
+import com.aliyun.oss.common.comm.SignVersion;
+import com.sky.properties.AliOssProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
-@Data
-@AllArgsConstructor
+
 @Slf4j
+@Component
 public class AliOssUtil {
+    @Autowired
+    private AliOssProperties aliOssProperties;
 
-    private String endpoint;
-    private String accessKeyId;
-    private String accessKeySecret;
-    private String bucketName;
+    public String upload(byte[] content, String fileName) {
+        String endpoint = aliOssProperties.getEndpoint();
+        String bucketName = aliOssProperties.getBucketName();
+        String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
+        String accessKeySecret = System.getenv("OSS_ACCESS_KEY_SECRET");
 
-    /**
-     * 文件上传
-     *
-     * @param bytes
-     * @param objectName
-     * @return
-     */
-    public String upload(byte[] bytes, String objectName) {
-
-        // 创建OSSClient实例。
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-
-        try {
-            // 创建PutObject请求。
-            ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(bytes));
-        } catch (OSSException oe) {
-            System.out.println("Caught an OSSException, which means your request made it to OSS, "
-                    + "but was rejected with an error response for some reason.");
-            System.out.println("Error Message:" + oe.getErrorMessage());
-            System.out.println("Error Code:" + oe.getErrorCode());
-            System.out.println("Request ID:" + oe.getRequestId());
-            System.out.println("Host ID:" + oe.getHostId());
-        } catch (ClientException ce) {
-            System.out.println("Caught an ClientException, which means the client encountered "
-                    + "a serious internal problem while trying to communicate with OSS, "
-                    + "such as not being able to access the network.");
-            System.out.println("Error Message:" + ce.getMessage());
-        } finally {
-            if (ossClient != null) {
-                ossClient.shutdown();
-            }
+        if (accessKeyId == null || accessKeyId.isEmpty()) {
+            accessKeyId = aliOssProperties.getAccessKeyId();
+        }
+        if (accessKeySecret == null || accessKeySecret.isEmpty()) {
+            accessKeySecret = aliOssProperties.getAccessKeySecret();
         }
 
-        //文件访问路径规则 https://BucketName.Endpoint/ObjectName
-        StringBuilder stringBuilder = new StringBuilder("https://");
-        stringBuilder
-                .append(bucketName)
-                .append(".")
-                .append(endpoint)
-                .append("/")
-                .append(objectName);
+        String Dir = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        log.info("文件上传到:{}", stringBuilder.toString());
+        String newFileName = UUID.randomUUID() + fileName.substring(fileName.lastIndexOf("."));
+        String objectname = Dir + '/' + newFileName;
 
-        return stringBuilder.toString();
+        //创建实例
+        ClientBuilderConfiguration conf = new ClientBuilderConfiguration();
+        conf.setSignatureVersion(SignVersion.V2);
+
+        CredentialsProvider credentialsProvider = new DefaultCredentialProvider(accessKeyId, accessKeySecret);
+        OSS ossClient = new OSSClientBuilder().build(endpoint, credentialsProvider, conf);
+
+        //上传文件
+        InputStream inputStream = new ByteArrayInputStream(content);
+        ossClient.putObject(bucketName, objectname, inputStream);
+
+        //关闭OSSClient
+        ossClient.shutdown();
+        
+        //返回文件访问路径
+        String url = "https://" + bucketName + "." + endpoint + "/" + objectname;
+        log.info("上传路径:{}", url);
+        return url;
     }
+
 }

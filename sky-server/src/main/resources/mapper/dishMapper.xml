@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.dishMapper">
+<!--    其中usegenearatedKeys是把插入后的id拿出来 keypropertys主键回显-->
+    <insert id="save" parameterType="com.sky.entity.Dish" useGeneratedKeys="true" keyProperty="id">
+        insert into dish (name, category_id, price, image, description, status, create_time, update_time, create_user,
+                          update_user)
+        values (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status}, #{createTime}, #{updateTime},
+                #{createUser}, #{updateUser})
+    </insert>
+    <update id="status">
+        update  dish set status=#{status} where id=#{id}
+    </update>
+
+    <delete id="delete">
+        delete from dish where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="list" resultType="com.sky.vo.DishVO">
+        select d.*,c.name categoryName
+        from dish d left join category c on d.category_id=c.id
+        <where>
+            <if test="name !=null and name !=''">
+                d.name like concat('%',#{name},'%')
+            </if>
+            <if test="categoryId !=null">
+                 and d.category_id=#{categoryId}
+            </if>
+           <if test="status !=null">
+               and d.status=#{status}
+           </if>
+        </where>
+        order by d.create_time desc
+    </select>
+
+<!--    标签	作用-->
+<!--    <resultMap>	定义结果怎么封装（数据库 → Java 对象）-->
+<!--    <id>	映射主键（必须写，用来合并一对多数据）-->
+<!--    <result>	映射普通字段-->
+<!--    <collection>	一对多映射（封装成 List 集合）-->
+<!--    <select>	执行查询 SQL-->
+<!--     autoMapping 开启自动映射-->
+    <!--        <result-->
+    <!--                column="categoryName"   ← 对应上面查询后的列名-->
+    <!--        property="categoryName" ← 对应 DishVO 里的属性名-->
+    <!--        />-->
+    <resultMap id="dishResultMap" type="com.sky.vo.DishVO" autoMapping="true">
+        <id column="d_id" property="id"/>
+        <result column="categoryName" property="categoryName"/>
+        <collection property="flavors" ofType="com.sky.entity.DishFlavor" >
+            <id column="f_id" property="id"/>
+            <result column="dish_id" property="dishId"></result>
+            <result column="f_name" property="name"></result>
+            <result column="value" property="value"></result>
+        </collection>
+    </resultMap>
+
+    <select id="get" resultMap="dishResultMap">
+        select
+            d.id d_id,
+            d.name,
+            d.category_id,
+            d.price,
+            d.image,
+            d.description,
+            d.status,
+            d.create_time,
+            d.update_time,
+            d.create_user,
+            d.update_user,
+            c.name categoryName,
+            f.id f_id,
+            f.dish_id ,
+            f.name f_name,
+            f.value
+        from dish d
+        left join category c on d.category_id = c.id
+        left join dish_flavor f on d.id = f.dish_id
+        where d.id = #{id}
+    </select>
+    <select id="lists" resultType="com.sky.entity.Dish">
+        select d.*,c.id categoryId
+        from dish d left join category c on d.category_id=c.id
+    </select>
+    <select id="dishlist" resultType="com.sky.entity.Dish">
+        select * from dish where status=1 and category_id=#{categoryId}
+    </select>
+</mapper>
+
+

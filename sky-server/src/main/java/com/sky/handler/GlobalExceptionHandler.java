@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     @ApiOperation("处理存在异常")
+    //唯一性处理
     public Result exceptionHandler(SQLIntegrityConstraintViolationException ex) {
         log.error("异常信息{}", ex.getMessage());
         String message = ex.getMessage();
