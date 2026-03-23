@@ -10,6 +10,7 @@ import com.sky.vo.SetmealVO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class setmealController {
     private setmealService setmealService;
 
    @PostMapping
+    @CacheEvict(cacheNames = "setmealCache" ,key="#setmealDTO.categoryId")//精确清理
    public Result save(@RequestBody SetmealDTO setmealDTO){
        log.info("setmealDTO={}",setmealDTO);
            setmealService.save(setmealDTO);
@@ -47,12 +49,14 @@ public class setmealController {
 
 
    @DeleteMapping
+   @CacheEvict(cacheNames = "setmealCache" ,allEntries = true)//清理所有数据
     public Result delete(@RequestParam List<Long> ids){
        setmealService.delete(ids);
        return Result.success();
    }
 
    @PutMapping
+   @CacheEvict(cacheNames = "setmealCache" ,allEntries = true)
     public Result update(@RequestBody SetmealDTO setmealDTO){
        setmealService.update(setmealDTO);
        return Result.success();
@@ -60,6 +64,7 @@ public class setmealController {
    }
 
    @PostMapping("/status/{status}")
+   @CacheEvict(cacheNames = "setmealCache" ,allEntries = true)
     public Result status(@PathVariable Integer status,Long id){
        setmealService.statusC(status,id);
                return Result.success();

@@ -39,7 +39,7 @@ public class dishController {
         log.info("开始:{}",dishDTO);
        dishService.save(dishDTO);
        Long categoryId = dishDTO.getCategoryId();
-       String key ="dish"+categoryId;
+       String key ="dish_"+categoryId;
        cleanCache(key);
        return Result.success();
     }

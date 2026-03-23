@@ -17,6 +17,7 @@ spring:
     port: ${sky.redis.port}
     password: ${sky.redis.password}
     database: ${sky.redis.database}
+    timeout: 7200000
 
 mybatis:
   #mapper配置文件
