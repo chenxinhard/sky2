@@ -19,7 +19,7 @@ public class adminstatusController {
     @Autowired
     private RedisTemplate redisTemplate;
     @PutMapping("/{status}")
-    public Result<String> getStatus(@PathVariable Integer status) {
+    public Result<String> setStatus(@PathVariable Integer status) {
         log.info("店铺状态：{}", status ==1 ? "营业中":"打烊中");
         redisTemplate.opsForValue().set("status", status);
         return Result.success();

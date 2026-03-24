@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("userstatusController")
+@RestController("UserstatusController")
 @RequestMapping("/user/shop")
 @Slf4j
 public class userstatusController {

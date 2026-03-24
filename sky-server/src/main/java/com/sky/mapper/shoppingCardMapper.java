@@ -22,6 +22,7 @@ public interface shoppingCardMapper {
      @Select("select number\n" +
              "from shopping_cart where user_id=#{userId} and dish_id=#{dishId}")
     Integer findByDishId(ShoppingCart  shoppingCart);
+
     @Select("select number\n" +
            "from shopping_cart where user_id=#{userId} and setmeal_id=#{setmealId}")
     Integer findBySetmealId(ShoppingCart shoppingCart);
